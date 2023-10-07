@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+	<BaseOutputPath>Build</BaseOutputPath>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	<ForceCopyNativeAssimp>false</ForceCopyNativeAssimp>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ImGui.NET" Version="1.89.6" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="zlib.net-mutliplatform" Version="1.0.6" />
+  </ItemGroup>
+
+	
+	
+	
+	  
+  <ItemGroup>
+    <Reference Include="Nibble">
+      <HintPath>lib\Nibble.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="CopyCustomContentBuild" AfterTargets="AfterBuild">
+		<Copy SourceFiles="$(TargetDir)NibbleZwiftPlugin.dll" DestinationFolder="..\NibbleEditor\Build\OPENGL_DEBUG\$(TargetFramework)\$(RuntimeIdentifier)\Plugins" />
+		<Message Text="Files copied successfully. $(Configuration)" Importance="high" />
+   </Target>
+
+</Project>
