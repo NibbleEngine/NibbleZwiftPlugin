@@ -54,7 +54,7 @@ namespace NibbleZwiftPlugin
             //saveFileDialog = new("zwidft-save-file", ExportFormats, ExportFormatExtensions); //Initialize OpenFolderDialog
             
             //openFileDialog.SetDialogPath(assemblypath);
-            openFileDialog.SetDialogPath("C:\\Users\\Greg\\Downloads\\Frames\\CubeLitening2021");
+            openFileDialog.SetDialogPath("C:\\Program Files (x86)\\Zwift\\data\\bikes\\Frames\\CubeLitening2021");
             //saveFileDialog.SetDialogPath("G:\\Downloads");
 
             Log("Plugin Loaded", LogVerbosityLevel.INFO);

@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NbCore;
-using NbCore.Math;
+using NbCore;
 using NbCore.Plugins;
 using ComponentAce.Compression.Libs.zlib;
 using NbCore.Platform.Windowing;
@@ -47,19 +47,18 @@ namespace NibbleZwiftPlugin
 
 
             //Create Scene Node
-            SceneGraphNode scene = PluginRef.EngineRef.CreateLocatorNode("GDE_Scene");
+            SceneGraphNode scene = PluginRef.EngineRef.CreateLocatorNode(Path.GetFileNameWithoutExtension(filepath));
             SceneComponent sc = new SceneComponent();
             scene.AddComponent<SceneComponent>(sc);
 
-            
             FileStream fs = new FileStream(filepath, FileMode.Open, FileAccess.Read);
             BinaryReader br = new BinaryReader(fs);
 
             //Fetch counters
             br.BaseStream.Seek(0xC, SeekOrigin.Begin);
-            int texture_count = (int) br.ReadUInt16();
+            int texture_count = br.ReadUInt16();
             br.BaseStream.Seek(0x8, SeekOrigin.Begin);
-            int material_count = (int) br.ReadUInt16();
+            int material_count = br.ReadUInt16();
 
             //Fetch Section Offsets
             br.BaseStream.Seek(0x18, SeekOrigin.Begin);
@@ -70,7 +69,6 @@ namespace NibbleZwiftPlugin
             uint model_section_offset = br.ReadUInt32();
 
 
-            
             //Fetch textures
             for (int i = 0; i < texture_count; i++)
             {
@@ -115,10 +113,12 @@ namespace NibbleZwiftPlugin
                         {
                             _sampler.Name = "Diffuse Map";
                             _sampler.ShaderBinding = "mpCustomPerMaterial.gDiffuseMap";
+                            mat.AddFlag(NbMaterialFlagEnum._NB_DIFFUSE_MAP);
                         } else if (j == 1)
                         {
                             _sampler.Name = "Normal Map";
                             _sampler.ShaderBinding = "mpCustomPerMaterial.gNormalMap";
+                            mat.AddFlag(NbMaterialFlagEnum._NB_NORMAL_MAP);
                         }
 
                         mat.Samplers.Add(_sampler);
@@ -128,7 +128,7 @@ namespace NibbleZwiftPlugin
                 //Get correct shader config
                 NbShaderSource conf_vs = NbCore.Common.RenderState.engineRef.GetShaderSourceByFilePath("./Assets/Shaders/Source/Simple_VS.glsl");
                 NbShaderSource conf_fs = NbCore.Common.RenderState.engineRef.GetShaderSourceByFilePath("./Assets/Shaders/Source/ubershader_fs.glsl");
-                NbShaderMode conf_mode = NbShaderMode.DEFFERED;
+                NbShaderMode conf_mode = NbShaderMode.DEFFERED | NbShaderMode.LIT;
 
                 ulong conf_hash = NbShaderConfig.GetHash(conf_vs, conf_fs, null, null, null, conf_mode);
 
@@ -344,7 +344,7 @@ namespace NibbleZwiftPlugin
                     Hash = NbHasher.CombineHash(_meshdata.Hash, _metadata.GetHash()),
                     Data = _meshdata,
                     MetaData = _metadata,
-                    Material = Materials[mat_id_stream1]
+                    Material = mat_id_stream1 < Materials.Count ? Materials[mat_id_stream1] : PluginRef.EngineRef.GetMaterialByName("defaultMat")
                 };
 
                 //Create Mesh Node
@@ -389,17 +389,18 @@ namespace NibbleZwiftPlugin
             zs.Flush();
             
             
-            //FileStream decomp_file = new FileStream("tex_test.tgax", FileMode.Create, FileAccess.Write);
+            FileStream decomp_file = new FileStream("tex_test.tgax", FileMode.Create, FileAccess.Write);
             decomp_stream.Position = 0;
-            //decomp_stream.CopyTo(decomp_file);
-            //decomp_file.Close();
+            decomp_stream.CopyTo(decomp_file);
+            decomp_file.Close();
 
             //Get texture info
             br = new BinaryReader(decomp_stream);
             decomp_stream.Seek(0xC, SeekOrigin.Begin);
             uint tex_width = br.ReadUInt16();
             uint tex_height = br.ReadUInt16();
-            uint tex_type = br.ReadUInt16();
+            uint tex_type = br.ReadByte();
+            uint tex_mipmap_count = br.ReadByte();
             byte[] tex_raw_data = br.ReadBytes((int) decomp_stream.Length - 0x12);
             br.Close();
 
@@ -423,7 +424,7 @@ namespace NibbleZwiftPlugin
             while(tex_size < tex_raw_data.Length)
             {
                 tex_size += pitch_size;
-                pitch_size = Math.Max(block_size, pitch_size / 4);
+                pitch_size = System.Math.Max(block_size, pitch_size / 4);
                 mipmap_count++;
             }
 
